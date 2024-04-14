@@ -1,0 +1,41 @@
+name: Generate Semantic Version
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  generate-version:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Determine Version
+      id: version
+      run: |
+        # Use git log to extract commit messages since the last tag
+        COMMIT_MESSAGES=$(git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"%s")
+        
+        # Initialize version parts
+        MAJOR=0
+        MINOR=1
+        PATCH=0
+        
+        # Parse commit messages to determine version parts
+        while IFS= read -r line; do
+          if [[ $line =~ ^feat: ]]; then
+            ((MINOR++)) # Increment MINOR for new features
+            PATCH=0     # Reset PATCH for new features
+          elif [[ $line =~ ^fix: ]]; then
+            ((PATCH++)) # Increment PATCH for bug fixes
+          fi
+        done <<< "$COMMIT_MESSAGES"
+        
+        # Output the determined version
+        echo "::set-output name=version::${MAJOR}.${MINOR}.${PATCH}"
+
+    - name: Echo Version
+      run: echo "Generated Version: ${{ steps.version.outputs.version }}"

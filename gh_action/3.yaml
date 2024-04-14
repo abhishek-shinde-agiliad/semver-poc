@@ -1,0 +1,47 @@
+name: Maven Build and Package
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+
+      - name: Build with Maven
+        run: mvn clean package
+
+      - name: Extract Git Information
+        id: git_info
+        run: echo "::set-output name=commit_sha::$(git rev-parse --short HEAD)"
+
+      - name: Set Date Timestamp
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - name: Set Semantic Version
+        id: semantic_version
+        run: echo "::set-output name=semantic_version::$(cat pom.xml | grep '<version>' | head -n1 | sed 's/.*<version>\(.*\)<\/version>.*/\1/')"
+
+      - name: Generate Artifact Filename
+        id: artifact_filename
+        run: echo "::set-output name=filename::$(echo my-artifact-${{ steps.semantic_version.outputs.semantic_version }}-${{ steps.date.outputs.date }}-${{ steps.git_info.outputs.commit_sha }}.jar)"
+
+      - name: Move Artifact to Output Directory
+        run: mv target/*.jar ${{ github.workspace }}/${{ steps.artifact_filename.outputs.filename }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-artifact
+          path: ${{ github.workspace }}/${{ steps.artifact_filename.outputs.filename }}

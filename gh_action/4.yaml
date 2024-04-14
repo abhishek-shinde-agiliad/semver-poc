@@ -1,0 +1,33 @@
+name: Generate Makefile Artifacts
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set Date Timestamp
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - name: Extract Git Information
+        id: git_info
+        run: echo "::set-output name=commit_sha::$(git rev-parse --short HEAD)"
+
+      - name: Set Semantic Version
+        id: semantic_version
+        run: echo "::set-output name=semantic_version::1.0.0"  # Replace with your desired version
+
+      - name: Generate Makefile Artifact
+        run: |
+          echo "VERSION=${{ steps.semantic_version.outputs.semantic_version }}" >> Makefile
+          echo "DATE=${{ steps.date.outputs.date }}" >> Makefile
+          echo "COMMIT_SHA=${{ steps.git_info.outputs.commit_sha }}" >> Makefile
+          # Add any additional Makefile content or commands here

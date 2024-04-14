@@ -1,0 +1,29 @@
+name: Maven Build
+
+on:
+  push:
+    branches:
+      - main # Trigger on pushes to the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+
+      - name: Build with Maven
+        run: mvn clean package
+
+      - name: Generate Version Information
+        id: version
+        run: echo "::set-output name=version::$(date +'%Y.%m.%d')-$(git rev-parse --short HEAD)"
+
+      - name: Show Version
+        run: echo "Version: ${{ steps.version.outputs.version }}"
