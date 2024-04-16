@@ -14,7 +14,7 @@ ENV SHA_KEY=${SHA_KEY}
 
 COPY src /usr/src/app/src  
 COPY pom.xml /usr/src/app  
-RUN mvn -f /usr/src/app/pom.xml clean package
+RUN mvn -f /usr/src/app/pom.xml -DVERSION=$${VERSION}-DDATE_TIMESTAMP=$DATE_TIMESTAMP -DSHA_KEY=${SHA_KEY} clean package
 
 #
 # PACKAGE STAGE
