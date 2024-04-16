@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.example</groupId>
 	<artifactId>demo</artifactId>
-	<version>${VERSION}-${DATE}-${BUILD_NUMBER}-${SHA_KEY}</version>
+	<version>${VERSION}-${DATE_TIMESTAMP}-${SHA_KEY}</version>
 	<name>demo</name>
 	<description>Demo project for Spring Boot</description>
 
