@@ -19,7 +19,7 @@ jobs:
 
       - name: Set Date Timestamp
         id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+        run: echo "::set-output name=date::$(date +'%Y%m%d%H%M%S')"
 
       - name: Set Semantic Version
         id: semver
