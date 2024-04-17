@@ -29,6 +29,18 @@ jobs:
         id: version
         run: echo "::set-output name=version::$(date +'%Y%m%d%H%M%S')-$(git rev-parse --short HEAD)"
 
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+      
+      - name: Semantic Release dry run
+        id: semantic      
+        run: |
+          OUTPUT=$(unset GITHUB_ACTIONS && npx semantic-release --dry-run --no-ci --branches "${{ github.head_ref }}")
+          VERSION=$(echo "$OUTPUT" | grep -o "The next release version is [0-9]*\.[0-9]*\.[0-9]*" | awk '{print $6}')
+          echo "::set-output name=version::$VERSION"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Show Version
         run: | 
           echo "sha_key is ${{ steps.sha_key.outputs.sha_key }}"
@@ -60,7 +72,7 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           tag_name: ${{ steps.semver.outputs.semver }}
           release_name: Release ${{ steps.semver.outputs.semver }}
@@ -68,3 +80,13 @@ jobs:
             Release ${{ steps.semver.outputs.semver }}
           draft: false
           prerelease: false
+          
+      - name: Upload Docker image to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./path/to/poc.tar.gz
+          asset_name: poc.tar.gz
+          asset_content_type: application/gzip
