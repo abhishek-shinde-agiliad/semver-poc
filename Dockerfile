@@ -19,7 +19,17 @@ RUN mvn -f /usr/src/app/pom.xml -DVERSION=${VERSION} -DDATE_TIMESTAMP=$DATE_TIME
 #
 # PACKAGE STAGE
 #
-FROM openjdk:11-jre-slim 
+FROM openjdk:11-jre-slim
+
+ARG VERSION
+ENV VERSION=${VERSION}
+
+ARG DATE_TIMESTAMP
+ENV DATE_TIMESTAMP=${DATE_TIMESTAMP}
+
+ARG SHA_KEY
+ENV SHA_KEY=${SHA_KEY}
+
 COPY --from=build /usr/src/app/target/demo-${VERSION}-${DATE_TIMESTAMP}-${SHA_KEY}.jar /usr/app/demo-${VERSION}-${DATE_TIMESTAMP}-${SHA_KEY}.jar  
 EXPOSE 8080  
 CMD ["java","-jar","/usr/app/demo-${VERSION}-${DATE_TIMESTAMP}-${SHA_KEY}.jar"]  
