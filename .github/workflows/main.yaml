@@ -61,11 +61,12 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
   
-      - name: Push Docker image
+      - name: Push and save Docker image
         run: |
           docker push abhishekshindeagiliad/poc:latest
           # docker push abhishekshindeagiliad/poc:${{ github.sha }}
           # docker push abhishekshindeagiliad/poc:${{ steps.semver.outputs.version }}
+          docker save -o /tmp/poc.tar.gz abhishekshindeagiliad/poc:latest
           
       - name: Create GitHub Release
         id: create_release
@@ -86,6 +87,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./path/to/poc.tar.gz
+          asset_path: /tmp/poc.tar.gz
           asset_name: poc.tar.gz
           asset_content_type: application/gzip
