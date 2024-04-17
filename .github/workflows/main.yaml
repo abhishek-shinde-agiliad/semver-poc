@@ -27,7 +27,7 @@ jobs:
 
       - name: Generate Version Information
         id: version
-        run: echo "::set-output name=version::$(date +'%Y.%m.%d')-$(git rev-parse --short HEAD)"
+        run: echo "::set-output name=version::$(date +'%Y%m%d%H%M%S')-$(git rev-parse --short HEAD)"
 
       - name: Show Version
         run: | 

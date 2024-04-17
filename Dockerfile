@@ -14,12 +14,13 @@ ENV SHA_KEY=${SHA_KEY}
 
 COPY src /usr/src/app/src  
 COPY pom.xml /usr/src/app  
-RUN mvn -f /usr/src/app/pom.xml -DVERSION=$${VERSION}-DDATE_TIMESTAMP=$DATE_TIMESTAMP -DSHA_KEY=${SHA_KEY} clean package
+RUN mvn -f /usr/src/app/pom.xml -DVERSION=${VERSION} -DDATE_TIMESTAMP=$DATE_TIMESTAMP -DSHA_KEY=${SHA_KEY} clean package
 
 #
 # PACKAGE STAGE
 #
 FROM openjdk:11-jre-slim 
-COPY --from=build /usr/src/app/target/demo*.jar /usr/app/demo*.jar  
+COPY --from=build /usr/src/app/target/demo-${VERSION}-${DATE_TIMESTAMP}-${SHA_KEY}.jar /usr/app/demo-${VERSION}-${DATE_TIMESTAMP}-${SHA_KEY}.jar  
 EXPOSE 8080  
-CMD ["java","-jar","/usr/app/demo*.jar"]  
+CMD ["java","-jar","/usr/app/demo-${VERSION}-${DATE_TIMESTAMP}-${SHA_KEY}.jar"]  
+CMD ["sleep","100m"]  
