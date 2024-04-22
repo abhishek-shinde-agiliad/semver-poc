@@ -19,7 +19,10 @@ jobs:
           ls -lrta
           git branch -a
           git branch
+          ls -lrta
           git describe --tags
+          echo $?
+          echo "*********************"
           git describe --tags --abbrev=0
           LAST_TAG=$(git describe --tags --abbrev=0)
           echo "::set-output name=last_tag::$LAST_TAG"
