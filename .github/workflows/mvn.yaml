@@ -20,6 +20,9 @@ jobs:
           git branch -a
           git branch
           ls -lrta
+          echo "git describe"
+          git describe
+          echo "###################"
           git describe --tags
           echo $?
           echo "*********************"
