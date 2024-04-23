@@ -19,21 +19,11 @@ jobs:
       - name: Get last release tag
         id: last_release
         run: |
-          ls -lrta
-          git branch -a
-          git branch
-          ls -lrta
-          echo "###################"
           git fetch --all
-          git describe --all
-          git describe --tags --abbrev=0
-          echo "###################"
-          git describe --tags
-          echo $?
-          echo "*********************"
           git describe --tags --abbrev=0
           LAST_TAG=$(git describe --tags --abbrev=0)
-          echo "::set-output name=last_tag::$LAST_TAG"
+          # echo "::set-output name=last_tag::$LAST_TAG"
+          echo "{last_tag}={$LAST_TAG}" >> $GITHUB_OUTPUT
 
           - name: Determine Version Change
           id: determine_version
