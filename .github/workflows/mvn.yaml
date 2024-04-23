@@ -19,57 +19,46 @@ jobs:
       - name: Get last release tag
         id: last_release
         run: |
-          ls -lrta
-          git branch -a
-          git branch
-          ls -lrta
-          echo "###################"
           git fetch --all
-          git describe --all
-          git describe --tags --abbrev=0
-          echo "###################"
-          git describe --tags
-          echo $?
-          echo "*********************"
           git describe --tags --abbrev=0
           LAST_TAG=$(git describe --tags --abbrev=0)
           echo "::set-output name=last_tag::$LAST_TAG"
 
-          - name: Determine Version Change
-          id: determine_version
-          run: |
-            # Extract version components
-            LAST_TAG="${{ steps.last_release.outputs.last_tag }}"
-            LAST_MAJOR=$(echo "$LAST_TAG" | cut -d. -f1)
-            LAST_MINOR=$(echo "$LAST_TAG" | cut -d. -f2)
-            LAST_PATCH=$(echo "$LAST_TAG" | cut -d. -f3)
+      - name: Determine Version Change
+        id: determine_version
+        run: |
+          # Extract version components
+          LAST_TAG="${{ steps.last_release.outputs.last_tag }}"
+          LAST_MAJOR=$(echo "$LAST_TAG" | cut -d. -f1)
+          LAST_MINOR=$(echo "$LAST_TAG" | cut -d. -f2)
+          LAST_PATCH=$(echo "$LAST_TAG" | cut -d. -f3)
   
-            # Extract pull request subject
-            PR_SUBJECT=$(jq -r .pull_request.title $GITHUB_EVENT_PATH)
-            echo "PR_subject : - $PR_SUBJECT"
+          # Extract pull request subject
+          PR_SUBJECT=$(jq -r .pull_request.title $GITHUB_EVENT_PATH)
+          echo "PR_subject : - $PR_SUBJECT"
   
-            # Extract commit messages
-            COMMIT_MESSAGES=$(git log --format=%B ${{ github.event.before }}..${{ github.event.after }})
-            echo "COMMIT_MESSAGE :- $COMMIT_MESSAGES"
+          # Extract commit messages
+          COMMIT_MESSAGES=$(git log --format=%B ${{ github.event.before }}..${{ github.event.after }})
+          echo "COMMIT_MESSAGES :- $COMMIT_MESSAGES"
   
-            # Determine version change based on PR subject and commit messages
-            if echo "$PR_SUBJECT" | grep -qi -e '^major' -e "^new_release_version" ; then
-              NEW_MAJOR=$((LAST_MAJOR + 1))
-              NEW_MINOR=0
-              NEW_PATCH=0
-            elif echo "$PR_SUBJECT" | grep -qi -e '^minor' -e "^feature"; then
-              NEW_MAJOR=$LAST_MAJOR
-              NEW_MINOR=$((LAST_MINOR + 1))
-              NEW_PATCH=0
-            else
-              NEW_MAJOR=$LAST_MAJOR
-              NEW_MINOR=$LAST_MINOR
-              NEW_PATCH=$((LAST_PATCH + 1))
-            fi
+          # Determine version change based on PR subject and commit messages
+          if echo "$PR_SUBJECT" | grep -qi -e '^major' -e "^new_release_version" || echo "$COMMIT_MESSAGES" | grep -qi -e '^major' -e "^new_release_version"  ; then
+            NEW_MAJOR=$((LAST_MAJOR + 1))
+            NEW_MINOR=0
+            NEW_PATCH=0
+          elif echo "$PR_SUBJECT" | grep -qi -e '^minor' -e "^feature"  || echo "$COMMIT_MESSAGES" | grep -qi -e '^minor' -e "^feature" ; then
+            NEW_MAJOR=$LAST_MAJOR
+            NEW_MINOR=$((LAST_MINOR + 1))
+            NEW_PATCH=0
+          else
+            NEW_MAJOR=$LAST_MAJOR
+            NEW_MINOR=$LAST_MINOR
+            NEW_PATCH=$((LAST_PATCH + 1))
+          fi
   
-            echo "::set-output name=new_major::$NEW_MAJOR"
-            echo "::set-output name=new_minor::$NEW_MINOR"
-            echo "::set-output name=new_patch::$NEW_PATCH"
+          echo "::set-output name=new_major::$NEW_MAJOR"
+          echo "::set-output name=new_minor::$NEW_MINOR"
+          echo "::set-output name=new_patch::$NEW_PATCH"
 
       - name: Generate New Version
         id: generate_version
