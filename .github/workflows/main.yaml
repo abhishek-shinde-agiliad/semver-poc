@@ -47,16 +47,19 @@ jobs:
 
           # Extract pull request subject
           PR_SUBJECT=$(jq -r .pull_request.title $GITHUB_EVENT_PATH)
+          
+          echo "$PR_SUBJECT"
 
           # Extract commit messages
           COMMIT_MESSAGES=$(git log --format=%B ${{ github.event.before }}..${{ github.event.after }})
+          echo "$COMMIT_MESSAGES"
 
           # Determine version change based on PR subject and commit messages
-          if echo "$PR_SUBJECT" | grep -q 'major'; then
+          if echo "$PR_SUBJECT" | grep -qi -e '^major' -e "^new_release_version" ; then
             NEW_MAJOR=$((LAST_MAJOR + 1))
             NEW_MINOR=0
             NEW_PATCH=0
-          elif echo "$PR_SUBJECT" | grep -q 'minor'; then
+          elif echo "$PR_SUBJECT" | grep -qi -e '^minor' -e "^feature"; then
             NEW_MAJOR=$LAST_MAJOR
             NEW_MINOR=$((LAST_MINOR + 1))
             NEW_PATCH=0

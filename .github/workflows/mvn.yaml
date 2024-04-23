@@ -35,40 +35,41 @@ jobs:
           LAST_TAG=$(git describe --tags --abbrev=0)
           echo "::set-output name=last_tag::$LAST_TAG"
 
-      - name: Determine Version Change
-        id: determine_version
-        run: |
-          # Extract version components
-          LAST_TAG="${{ steps.last_release.outputs.last_tag }}"
-          LAST_MAJOR=$(echo "$LAST_TAG" | cut -d. -f1)
-          LAST_MINOR=$(echo "$LAST_TAG" | cut -d. -f2)
-          LAST_PATCH=$(echo "$LAST_TAG" | cut -d. -f3)
-
-          # Extract pull request subject
-          PR_SUBJECT=$(jq -r .pull_request.title $GITHUB_EVENT_PATH)
-
-          # Extract commit messages
-          COMMIT_MESSAGES=$(git log --format=%B ${{ github.event.before }}..${{ github.event.after }})
-
-          # Logic to determine version change based on PR subject and commit messages
-          # Example logic:
-          if echo "$PR_SUBJECT" | grep -q 'major'; then
-            NEW_MAJOR=$((LAST_MAJOR + 1))
-            NEW_MINOR=0
-            NEW_PATCH=0
-          elif echo "$PR_SUBJECT" | grep -q 'minor'; then
-            NEW_MAJOR=$LAST_MAJOR
-            NEW_MINOR=$((LAST_MINOR + 1))
-            NEW_PATCH=0
-          else
-            NEW_MAJOR=$LAST_MAJOR
-            NEW_MINOR=$LAST_MINOR
-            NEW_PATCH=$((LAST_PATCH + 1))
-          fi
-
-          echo "::set-output name=new_major::$NEW_MAJOR"
-          echo "::set-output name=new_minor::$NEW_MINOR"
-          echo "::set-output name=new_patch::$NEW_PATCH"
+          - name: Determine Version Change
+          id: determine_version
+          run: |
+            # Extract version components
+            LAST_TAG="${{ steps.last_release.outputs.last_tag }}"
+            LAST_MAJOR=$(echo "$LAST_TAG" | cut -d. -f1)
+            LAST_MINOR=$(echo "$LAST_TAG" | cut -d. -f2)
+            LAST_PATCH=$(echo "$LAST_TAG" | cut -d. -f3)
+  
+            # Extract pull request subject
+            PR_SUBJECT=$(jq -r .pull_request.title $GITHUB_EVENT_PATH)
+            echo "PR_subject : - $PR_SUBJECT"
+  
+            # Extract commit messages
+            COMMIT_MESSAGES=$(git log --format=%B ${{ github.event.before }}..${{ github.event.after }})
+            echo "COMMIT_MESSAGE :- $COMMIT_MESSAGES"
+  
+            # Determine version change based on PR subject and commit messages
+            if echo "$PR_SUBJECT" | grep -qi -e '^major' -e "^new_release_version" ; then
+              NEW_MAJOR=$((LAST_MAJOR + 1))
+              NEW_MINOR=0
+              NEW_PATCH=0
+            elif echo "$PR_SUBJECT" | grep -qi -e '^minor' -e "^feature"; then
+              NEW_MAJOR=$LAST_MAJOR
+              NEW_MINOR=$((LAST_MINOR + 1))
+              NEW_PATCH=0
+            else
+              NEW_MAJOR=$LAST_MAJOR
+              NEW_MINOR=$LAST_MINOR
+              NEW_PATCH=$((LAST_PATCH + 1))
+            fi
+  
+            echo "::set-output name=new_major::$NEW_MAJOR"
+            echo "::set-output name=new_minor::$NEW_MINOR"
+            echo "::set-output name=new_patch::$NEW_PATCH"
 
       - name: Generate New Version
         id: generate_version
@@ -83,10 +84,3 @@ jobs:
       - name: Build Maven Project
         run: |
           mvn clean install
-
-      - name: Commit and Push Changes
-        run: |
-          git config --global user.name 'GitHub Action'
-          git config --global user.email 'github-action@example.com'
-          git commit -am "Update version in pom.xml"
-          git push
