@@ -51,8 +51,13 @@ jobs:
       - name: Build Docker image
         run: |
           docker build --build-arg VERSION="${{ steps.semver.outputs.semver }}" --build-arg DATE_TIMESTAMP="${{ steps.date.outputs.date }}" --build-arg SHA_KEY="${{ steps.sha_key.outputs.sha_key }}" -t poc:latest .
+          docker images
+          docker ps -a
+          echo "docker tag poc:latest poc:${{ steps.sha_key.outputs.sha_key }}"
           docker tag poc:latest poc:${{ steps.sha_key.outputs.sha_key }}
+          echo "docker tag poc:latest poc:${{ steps.semver.outputs.semver }}-${{ steps.date.outputs.date }}-${{ steps.sha_key.outputs.sha_key }}"
           docker tag poc:latest poc:${{ steps.semver.outputs.semver }}-${{ steps.date.outputs.date }}-${{ steps.sha_key.outputs.sha_key }}
+          echo "docker tag poc:latest docker push poc:${{ steps.semver.outputs.semver }}"
           docker tag poc:latest docker push poc:${{ steps.semver.outputs.semver }}
 
       - name: Login to Docker Hub
