@@ -23,6 +23,7 @@ jobs:
           echo "###################"
           git fetch --all
           git describe --all
+          git describe --tags --abbrev=0
           echo "###################"
           git describe --tags
           echo $?
