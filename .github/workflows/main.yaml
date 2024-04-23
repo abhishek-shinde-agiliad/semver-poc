@@ -12,8 +12,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
-      - name: Extract Git Information
+      - name: Git SHA Key
         id: sha_key
         run: echo "::set-output name=sha_key::$(git rev-parse --short HEAD)"
 
@@ -21,16 +24,64 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +'%Y%m%d%H%M%S')"
 
-      - name: Set Semantic Version
+      # - name: Set Semantic Version
+      #   id: semver
+      #   run: echo "::set-output name=semver::$(cat pom.xml | grep '<version>' | head -n1 | sed 's/.*<version>\(.*\)<\/version>.*/\1/')"
+
+      - name: Get Last Release Tag
+        id: last_release
+        run: |
+          git fetch --all
+          git describe --tags --abbrev=0
+          LAST_TAG=$(git describe --tags --abbrev=0)
+          echo "::set-output name=last_tag::$LAST_TAG"
+
+      - name: Determine Version Change
+        id: determine_version
+        run: |
+          # Extract version components
+          LAST_TAG="${{ steps.last_release.outputs.last_tag }}"
+          LAST_MAJOR=$(echo "$LAST_TAG" | cut -d. -f1)
+          LAST_MINOR=$(echo "$LAST_TAG" | cut -d. -f2)
+          LAST_PATCH=$(echo "$LAST_TAG" | cut -d. -f3)
+
+          # Extract pull request subject
+          PR_SUBJECT=$(jq -r .pull_request.title $GITHUB_EVENT_PATH)
+
+          # Extract commit messages
+          COMMIT_MESSAGES=$(git log --format=%B ${{ github.event.before }}..${{ github.event.after }})
+
+          # Determine version change based on PR subject and commit messages
+          if echo "$PR_SUBJECT" | grep -q 'major'; then
+            NEW_MAJOR=$((LAST_MAJOR + 1))
+            NEW_MINOR=0
+            NEW_PATCH=0
+          elif echo "$PR_SUBJECT" | grep -q 'minor'; then
+            NEW_MAJOR=$LAST_MAJOR
+            NEW_MINOR=$((LAST_MINOR + 1))
+            NEW_PATCH=0
+          else
+            NEW_MAJOR=$LAST_MAJOR
+            NEW_MINOR=$LAST_MINOR
+            NEW_PATCH=$((LAST_PATCH + 1))
+          fi
+
+          echo "::set-output name=new_major::$NEW_MAJOR"
+          echo "::set-output name=new_minor::$NEW_MINOR"
+          echo "::set-output name=new_patch::$NEW_PATCH"
+
+      - name: Generate New Version
         id: semver
-        run: echo "::set-output name=semver::$(cat pom.xml | grep '<version>' | head -n1 | sed 's/.*<version>\(.*\)<\/version>.*/\1/')"
+        run: |
+          NEW_VERSION="${{ steps.determine_version.outputs.new_major }}.${{ steps.determine_version.outputs.new_minor }}.${{ steps.determine_version.outputs.new_patch }}"
+          echo "::set-output name=semver::$NEW_VERSION"
 
-      - name: Generate Version Information
-        id: version
-        run: echo "::set-output name=version::$(date +'%Y%m%d%H%M%S')-$(git rev-parse --short HEAD)"
+      # - name: Generate Version Information
+      #   id: version
+      #   run: echo "::set-output name=version::$(date +'%Y%m%d%H%M%S')-$(git rev-parse --short HEAD)"
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
+      # - name: Setup Node.js environment
+      #   uses: actions/setup-node@v3
       
       # - name: Semantic Release dry run
       #   id: semantic      
@@ -51,11 +102,8 @@ jobs:
       - name: Build Docker image
         run: |
           docker build --build-arg VERSION="${{ steps.semver.outputs.semver }}" --build-arg DATE_TIMESTAMP="${{ steps.date.outputs.date }}" --build-arg SHA_KEY="${{ steps.sha_key.outputs.sha_key }}" -t abhishekshindeagiliad/poc:latest .
-          echo "docker tag abhishekshindeagiliad/poc:latest abhishekshindeagiliad/poc:${{ steps.sha_key.outputs.sha_key }}"
           docker tag abhishekshindeagiliad/poc:latest abhishekshindeagiliad/poc:${{ steps.sha_key.outputs.sha_key }}
-          echo "docker tag abhishekshindeagiliad/poc:latest abhishekshindeagiliad/poc:${{ steps.semver.outputs.semver }}-${{ steps.date.outputs.date }}-${{ steps.sha_key.outputs.sha_key }}"
           docker tag abhishekshindeagiliad/poc:latest abhishekshindeagiliad/poc:${{ steps.semver.outputs.semver }}-${{ steps.date.outputs.date }}-${{ steps.sha_key.outputs.sha_key }}
-          echo "docker tag abhishekshindeagiliad/poc:latest abhishekshindeagiliad/poc:${{ steps.semver.outputs.semver }}"
           docker tag abhishekshindeagiliad/poc:latest abhishekshindeagiliad/poc:${{ steps.semver.outputs.semver }}
 
       - name: Login to Docker Hub
