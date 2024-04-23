@@ -12,8 +12,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        fetch-depth: 0
-        fetch-tags: true
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Get last release tag
         id: last_release
