@@ -22,8 +22,7 @@ jobs:
           git fetch --all
           git describe --tags --abbrev=0
           LAST_TAG=$(git describe --tags --abbrev=0)
-          # echo "::set-output name=last_tag::$LAST_TAG"
-          echo "{last_tag}={$LAST_TAG}" >> $GITHUB_OUTPUT
+          echo "::set-output name=last_tag::$LAST_TAG"
 
       - name: Determine Version Change
         id: determine_version
