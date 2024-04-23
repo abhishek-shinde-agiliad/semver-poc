@@ -51,7 +51,7 @@ jobs:
       - name: Build Docker image
         run: |
           docker build --build-arg VERSION="${{ steps.semver.outputs.semver }}" --build-arg DATE_TIMESTAMP="${{ steps.date.outputs.date }}" --build-arg SHA_KEY="${{ steps.sha_key.outputs.sha_key }}" -t abhishekshindeagiliad/poc:latest .
-          docker tag abhishekshindeagiliad/poc:latest abhishekshindeagiliad/poc:${{ github.sha }}
+          docker tag abhishekshindeagiliad/poc:latest abhishekshindeagiliad/poc:${{ steps.sha_key.outputs.sha_key }}
           docker tag abhishekshindeagiliad/poc:latest abhishekshindeagiliad/poc:${{ steps.semver.outputs.semver }}-${{ steps.date.outputs.date }}-${{ steps.sha_key.outputs.sha_key }}
           docker tag abhishekshindeagiliad/poc:latest docker push abhishekshindeagiliad/poc:${{ steps.semver.outputs.semver }}
 
@@ -64,7 +64,7 @@ jobs:
       - name: Push and save Docker image
         run: |
           docker push abhishekshindeagiliad/poc:latest
-          docker push abhishekshindeagiliad/poc:${{ github.sha }}
+          docker push abhishekshindeagiliad/poc:${{ steps.sha_key.outputs.sha_key }}
           docker push abhishekshindeagiliad/poc:${{ steps.semver.outputs.semver }}-${{ steps.date.outputs.date }}-${{ steps.sha_key.outputs.sha_key }}
           docker push abhishekshindeagiliad/poc:${{ steps.semver.outputs.semver }}
           docker save -o /tmp/poc-${{ steps.semver.outputs.semver }}-${{ steps.date.outputs.date }}-${{ steps.sha_key.outputs.sha_key }}.tar.gz abhishekshindeagiliad/poc:latest
