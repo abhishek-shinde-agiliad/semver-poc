@@ -78,6 +78,7 @@ jobs:
           release_name: Release ${{ steps.semver.outputs.semver }}
           body: |
             Release ${{ steps.semver.outputs.semver }}
+          commit : Release ${{ steps.semver.outputs.semver }}
           draft: false
           prerelease: false
           
