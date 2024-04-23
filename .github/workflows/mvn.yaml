@@ -35,11 +35,9 @@ jobs:
   
           # Extract pull request subject
           PR_SUBJECT=$(jq -r .pull_request.title $GITHUB_EVENT_PATH)
-          echo "PR_subject : - $PR_SUBJECT"
   
           # Extract commit messages
           COMMIT_MESSAGES=$(git log --format=%B ${{ github.event.before }}..${{ github.event.after }})
-          echo "COMMIT_MESSAGES :- $COMMIT_MESSAGES"
   
           # Determine version change based on PR subject and commit messages
           if echo "$PR_SUBJECT" | grep -qi -e '^major' -e "^new_release_version" || echo "$COMMIT_MESSAGES" | grep -qi -e '^major' -e "^new_release_version"  ; then

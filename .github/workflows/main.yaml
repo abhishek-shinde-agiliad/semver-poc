@@ -24,10 +24,6 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +'%Y%m%d%H%M%S')"
 
-      # - name: Set Semantic Version
-      #   id: semver
-      #   run: echo "::set-output name=semver::$(cat pom.xml | grep '<version>' | head -n1 | sed 's/.*<version>\(.*\)<\/version>.*/\1/')"
-
       - name: Get Last Release Tag
         id: last_release
         run: |
@@ -47,19 +43,16 @@ jobs:
 
           # Extract pull request subject
           PR_SUBJECT=$(jq -r .pull_request.title $GITHUB_EVENT_PATH)
-          
-          echo "$PR_SUBJECT"
 
           # Extract commit messages
           COMMIT_MESSAGES=$(git log --format=%B ${{ github.event.before }}..${{ github.event.after }})
-          echo "$COMMIT_MESSAGES"
 
           # Determine version change based on PR subject and commit messages
-          if echo "$PR_SUBJECT" | grep -qi -e '^major' -e "^new_release_version" ; then
+          if echo "$PR_SUBJECT" | grep -qi -e '^major' -e "^new_release_version" || echo "$COMMIT_MESSAGES" | grep -qi -e '^major' -e "^new_release_version"  ; then
             NEW_MAJOR=$((LAST_MAJOR + 1))
             NEW_MINOR=0
             NEW_PATCH=0
-          elif echo "$PR_SUBJECT" | grep -qi -e '^minor' -e "^feature"; then
+          elif echo "$PR_SUBJECT" | grep -qi -e '^minor' -e "^feature"  || echo "$COMMIT_MESSAGES" | grep -qi -e '^minor' -e "^feature" ; then
             NEW_MAJOR=$LAST_MAJOR
             NEW_MINOR=$((LAST_MINOR + 1))
             NEW_PATCH=0
@@ -78,22 +71,6 @@ jobs:
         run: |
           NEW_VERSION="${{ steps.determine_version.outputs.new_major }}.${{ steps.determine_version.outputs.new_minor }}.${{ steps.determine_version.outputs.new_patch }}"
           echo "::set-output name=semver::$NEW_VERSION"
-
-      # - name: Generate Version Information
-      #   id: version
-      #   run: echo "::set-output name=version::$(date +'%Y%m%d%H%M%S')-$(git rev-parse --short HEAD)"
-
-      # - name: Setup Node.js environment
-      #   uses: actions/setup-node@v3
-      
-      # - name: Semantic Release dry run
-      #   id: semantic      
-      #   run: |
-      #     OUTPUT=$(unset GITHUB_ACTIONS && npx semantic-release --dry-run --no-ci --branches "${{ github.head_ref }}")
-      #     VERSION=$(echo "$OUTPUT" | grep -o "The next release version is [0-9]*\.[0-9]*\.[0-9]*" | awk '{print $6}')
-      #     echo "::set-output name=version::$VERSION"
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Show Version
         run: | 
