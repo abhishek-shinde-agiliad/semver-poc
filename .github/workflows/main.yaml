@@ -51,8 +51,14 @@ jobs:
       - name: Build Docker image
         run: |
           docker build --build-arg VERSION="${{ steps.semver.outputs.semver }}" --build-arg DATE_TIMESTAMP="${{ steps.date.outputs.date }}" --build-arg SHA_KEY="${{ steps.sha_key.outputs.sha_key }}" -t abhishekshindeagiliad/poc:latest .
+          echo "docker tag abhishekshindeagiliad/poc:latest abhishekshindeagiliad/poc:${{ steps.sha_key.outputs.sha_key }}"
+          echo "########################################################################################################################"
           docker tag abhishekshindeagiliad/poc:latest abhishekshindeagiliad/poc:${{ steps.sha_key.outputs.sha_key }}
+          echo "docker tag abhishekshindeagiliad/poc:latest abhishekshindeagiliad/poc:${{ steps.semver.outputs.semver }}-${{ steps.date.outputs.date }}-${{ steps.sha_key.outputs.sha_key }}"
+          echo "########################################################################################################################"
           docker tag abhishekshindeagiliad/poc:latest abhishekshindeagiliad/poc:${{ steps.semver.outputs.semver }}-${{ steps.date.outputs.date }}-${{ steps.sha_key.outputs.sha_key }}
+          echo "docker tag abhishekshindeagiliad/poc:latest docker push abhishekshindeagiliad/poc:${{ steps.semver.outputs.semver }}"
+          echo "########################################################################################################################"
           docker tag abhishekshindeagiliad/poc:latest docker push abhishekshindeagiliad/poc:${{ steps.semver.outputs.semver }}
 
       - name: Login to Docker Hub
